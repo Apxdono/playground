@@ -17,65 +17,39 @@ define([
             '$log',
             'api',
             '$q',
+            '$timeout',
 //            'items',
 
-            function (scp, $log, api, $q, items,delay) {
+            function (scp, $log, api, $q, $timeout,delay) {
                 scp.api = api;
-                scp.pageLoader = function(options){
-                    $log.debug('Requesting page', options);
-                    var deffered = $q.defer();
-                    var params = {
-                        page : options.pageNumber-1,
-                        size : options.pageSize
-                    };
-                    if(ng.isDefined(options.sortKey)){
-                        params.sort = options.sortKey + ',' + (options.sortDirection ? 'desc':'asc')
+
+                scp.table = {
+                    isLoading : false,
+                    items : [],
+                    tableData : function(tableState){
+                        if(!tableState.pagination.hasOwnProperty('number')) return;
+                        var t = $timeout(function(){
+                            scp.table.isLoading = true;
+                        },150);
+
+                        var params = {
+                            page : tableState.pagination.start/tableState.pagination.number,
+                            size : tableState.pagination.number
+                        };
+                        if(tableState.sort.hasOwnProperty('predicate')){
+                            params.sort = tableState.sort.predicate + ',' + (tableState.sort.reverse ? 'DESC' : 'ASC' )
+                        };
+                        ng.extend(params,tableState.search.predicateObject);
+                        $log.debug('Table state',tableState);
+                        api.search('tableData',params).then(function(d){
+                            scp.table.items = d.payload;
+                            tableState.pagination.numberOfPages = d.page.totalPages;
+                            $timeout.cancel(t);
+                            scp.table.isLoading = false;
+                        });
                     }
-
-                    scp.api.tableData(params).then(function(d){
-                        d.token = options.token;
-                        deffered.resolve(d);
-                    })
-
-                    return deffered.promise;
-
-//                    scp.api.read(params).then(function(data){
-//                        if(data.payload && data.payload.length > 0){
-//                            deffered.resolve({
-//                                items: data.payload,
-//                                currentPage: data.page.number+1,
-//                                totalPages: data.page.totalPages,
-//                                totalItems: data.page.totalElements,
-//                                pagingArray: [1,2,3,4,5],
-//                                token: options.token
-//                            });
-//                        } else {
-//                            deffered.reject();
-//                        }
-//
-//                    },function(reason){
-//                        deffered.reject(reason);
-//                    })
-//                    return deffered.promise;
                 };
-                scp.ajaxConfig = {
 
-                };
-                scp.columnsDefinition = [
-                    {
-                        columnHeaderDisplayName: 'Название',
-                        template: '<a ui-sref="shit.view(item)" ng-bind="::item.name"></a>',
-                        width: '40%',
-                        sortKey: 'name'
-                    },
-                    {
-                        columnHeaderDisplayName: 'Внутреннее имя',
-                        displayProperty: 'internalName',
-                        sortKey: 'internalName'
-                    }
-                ];
-
-//                scp.items = items.payload;
                 $log.info('scope', scp);
             }]);
 
@@ -111,6 +85,54 @@ define([
                     })
                 }
             }]);
+
+    app.directive('pageSelect', function($timeout) {
+        return {
+            restrict: 'E',
+            template: '<input type="number" class="form-control" style="width:80px" ng-model="inputPage" ng-change="delayedSelectPage(inputPage)">',
+            link: function(scope, element, attrs) {
+                var time;
+                scope.delayedSelectPage = function(inputPage){
+                    $timeout.cancel(time);
+                    time = $timeout(function(){
+                        scope.selectPage(inputPage);
+                    },400);
+                };
+                scope.$watch('currentPage', function(c) {
+                        scope.inputPage = c;
+                });
+            }
+        }
+    })
+
+    .directive('stPersist', function () {
+        return {
+            require: '^stTable',
+            link: function (scope, element, attr, ctrl) {
+                var nameSpace = attr.stPersist;
+
+                //save the table state every time it changes
+                scope.$watch(function () {
+                    return ctrl.tableState();
+                }, function (newValue, oldValue) {
+                    if (newValue !== oldValue) {
+                        localStorage.setItem(nameSpace, JSON.stringify(newValue));
+                    }
+                }, true);
+
+                //fetch the table state when the directive is loaded
+                if (localStorage.getItem(nameSpace)) {
+                    var savedState = JSON.parse(localStorage.getItem(nameSpace));
+                    var tableState = ctrl.tableState();
+
+                    angular.extend(tableState, savedState);
+                    ctrl.pipe();
+
+                }
+
+            }
+        };
+    });
 
 
     app.directive('showDuringResolve', function($rootScope) {

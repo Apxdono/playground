@@ -218,6 +218,12 @@
             <version>${wj.bootstrap}</version>
         </dependency>
 
+
+        <dependency>
+            <groupId>net.kaczmarzyk</groupId>
+            <artifactId>specification-arg-resolver</artifactId>
+            <version>0.6.0</version>
+        </dependency>
         <!--END WEBJARS-->
 
         <!--TESTING-->
@@ -230,6 +236,12 @@
         <!--END TESTING-->
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>kaczmarzyk.net</id>
+            <url>http://repo.kaczmarzyk.net</url>
+        </repository>
+    </repositories>
 
 
     <build>

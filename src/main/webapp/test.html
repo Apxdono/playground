@@ -8,14 +8,52 @@
         <!--</ul>-->
     <!--</div>-->
 
-    <ad-table-ajax table-name="table"
-                   column-definition="columnsDefinition"
-                   ajax-config="ajaxConfig"
-                   table-classes="table table-bordered"
-                   page-sizes="[5, 20, 50]"
-                   pagination-btn-group-classes="pagination pagination-xs"
-                   items-not-found-message="Нет записей для просмотра"
-                   page-loader="pageLoader">
-    </ad-table-ajax>
+    <style>
+        .border-top, table.table.border-top {
+            border-top: 2px solid #ddd;
+        }
+        .st-sort-ascent:after {
+            content: '\25B2';
+            float:right;
+        }
+        .st-sort-descent:after{
+            content: '\25BC';
+            float:right;
+         }
+    </style>
+
+
+    <table class="table table-striped border-top " st-persist="shitTable" st-pipe="table.tableData" st-table="table.items">
+        <thead class="text-primary">
+        <tr>
+            <th st-sort="name">Имя</th>
+            <th st-sort="internalName">Внутреннее имя</th>
+        </tr>
+        <tr class="text">
+            <th><input class="form-control" st-search="name"/></th>
+            <th><input class="form-control" st-search="internalName"/></th>
+        </tr>
+        </thead>
+        <tbody ng-show="!table.isLoading">
+        <tr ng-repeat="row in table.items">
+            <td><a ui-sref="shit.view(row)" ng-bind="::row.name"></a></td>
+            <td ng-bind="::row.internalName"></td>
+        </tr>
+        </tbody>
+        <tbody ng-show="table.isLoading">
+        <tr>
+            <td colspan="4" class="text-center">
+                Подождите, идёт загрузка данных... <span class="glyphicon glyphicon-refresh loading-icon"></span>
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td class="text-center" st-pagination="" st-items-by-page="5" st-template="pagination.html" colspan="4">
+
+            </td>
+        </tr>
+        </tfoot>
+    </table>
 
 </div>

@@ -15,37 +15,13 @@
             putReturnsValue: true,
             processResponse : true
         };
-
-        function adaptStrapPostProcess($q,data) {
-            var pages = 5, parr=[];
-            var minimumBound = data.page.number - Math.floor(pages / 2);
-            for (var i = minimumBound; i <= data.page.number; i++) {
-                if (i > 0) {
-                    parr.push(i);
-                }
-            }
-            while (parr.length < pages) {
-                if (i > data.page.totalPages) {
-                    break;
-                }
-                parr.push(i);
-                i++;
-            }
-            return {
-                items: data.payload,
-                currentPage: data.page.number+1,
-                totalPages: data.page.totalPages,
-                totalItems: data.page.totalElements,
-                pagingArray: parr
-            }
-        }
         
         var _methods = {
             'read': {method: 'GET', firstArgIsSuffix: true, noParams: true, processResponse: true},
             'save': {method: 'POST', altMethod: 'PUT', useSelf: true, processResponse: true},
             'delete': {method: 'DELETE', firstArgIsSuffix: true, noParams: true},
-            'search': {method: 'GET', firstArgIsSuffix: true, functionIsSuffix: true, processResponse: true},
-            'tableData': {method: 'GET',  processResponse: true, processingFunction : adaptStrapPostProcess }
+            'search': {method: 'GET', firstArgIsSuffix: true, functionIsSuffix: true, processResponse: true}
+            //'tableData': {method: 'GET',  processResponse: true, processingFunction : adaptStrapPostProcess }
         };
 
         this.basePath = function (prefix) {
