@@ -4,10 +4,11 @@ define([
     'uiRouter',
     'sdr',
     'adapt-strap-base',
-    'adapt-strap-tpl'
+    'adapt-strap-tpl',
+    'smart-table'
 ], function (ng) {
     'use strict';
-    var app = ng.module('pg', ['ngSanitize','SpringDataRest','ui.router','adaptv.adaptStrap']);
+    var app = ng.module('pg', ['ngSanitize','SpringDataRest','ui.router','adaptv.adaptStrap','smart-table']);
 
 
     app.controller('MainCtrl',
@@ -30,7 +31,13 @@ define([
                     if(ng.isDefined(options.sortKey)){
                         params.sort = options.sortKey + ',' + (options.sortDirection ? 'desc':'asc')
                     }
-                    return scp.api.tableData(params);
+
+                    scp.api.tableData(params).then(function(d){
+                        d.token = options.token;
+                        deffered.resolve(d);
+                    })
+
+                    return deffered.promise;
 
 //                    scp.api.read(params).then(function(data){
 //                        if(data.payload && data.payload.length > 0){

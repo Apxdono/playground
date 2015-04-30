@@ -8,6 +8,7 @@ try{
                 'angular-sanitize': 'webjars/angular-sanitize/1.3.11/angular-sanitize.min',
                 'adapt-strap-base': 'static/vendor/adapt-strap/adapt-strap',
                 'adapt-strap-tpl': 'static/vendor/adapt-strap/adapt-strap.tpl.min',
+                'smart-table' : 'webjars/smart-table/2.0.1/smart-table.min',
                 'ng-route': 'webjars/angularjs/${wj.angularjs}/angular-route',
                 'uiRouter': 'webjars/angular-ui-router/${wj.angularui.router}/angular-ui-router.min',
                 'sdr': 'static/apx/data-rest'
@@ -27,7 +28,8 @@ try{
                     exports : 'uiRouter'
                 },
                 'adapt-strap-base' : ['angular'],
-                'adapt-strap-tpl' : ['angular','adapt-strap-base']
+                'adapt-strap-tpl' : ['angular','adapt-strap-base'],
+                'smart-table' : ['angular']
             },
 
             // запустить приложение
