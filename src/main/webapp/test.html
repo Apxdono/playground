@@ -1,3 +1,21 @@
 <div>
-    Hello
+    Данные получены <a ui-sref="shit.create" class="btn btn-primary">Создать</a>
+    <!--<div>-->
+        <!--<ul>-->
+            <!--<li ng-repeat="shit in items">-->
+                <!--<span>{{::shit.name}}   <a ui-sref="shit.view({id : shit.id})" > Просмотреть </a></span>-->
+            <!--</li>-->
+        <!--</ul>-->
+    <!--</div>-->
+
+    <ad-table-ajax table-name="table"
+                   column-definition="columnsDefinition"
+                   ajax-config="ajaxConfig"
+                   table-classes="table table-bordered"
+                   page-sizes="[5, 20, 50]"
+                   pagination-btn-group-classes="pagination pagination-xs"
+                   items-not-found-message="Нет записей для просмотра"
+                   page-loader="pageLoader">
+    </ad-table-ajax>
+
 </div>

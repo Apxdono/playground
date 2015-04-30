@@ -1,0 +1,25 @@
+<div>
+    <a ui-sref="shit.list">Назад</a>
+
+    <form class="form-horizontal" ng-submit="save()">
+        <div class="form-group">
+            <label class="control-label col-sm-1">Название</label>
+
+            <div class="col-sm-2">
+                <input class="form-control " ng-model="model.name">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-sm-1">Внутреннее название</label>
+
+            <div class="col-sm-2">
+                <input class="form-control" ng-model="model.internalName">
+            </div>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-success">Сохранить</button>
+            <button type="button" class="btn btn-danger" ng-click="delete()">Удалить</button>
+        </div>
+    </form>
+    <pre ng-bind="model | json"></pre>
+</div>

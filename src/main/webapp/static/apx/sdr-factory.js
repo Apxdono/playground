@@ -2,7 +2,14 @@
 
     var module = ng.module('SpringDataRest');
 
-    module.factory('sdrFactory', ['$http', '$q', '$log', 'sdrModel', function ($http, $q, $log, defmdl) {
+    module.factory('sdrFactory', ['$http', '$q', '$log', 'sdrModel', function ($http, $q, $log, sdrModel) {
+        var embProp = '_embedded',
+            pageProp = 'page',
+            basePath = 'rest/api/',
+            defaultConf = {
+                objectModel : sdrModel
+            };
+
 
 
         function callResource(url, params, method, config, success, error) {
@@ -23,33 +30,28 @@
             var deff = $q.defer();
             $http(request).then(function (data) {
                 var result;
-                data = data.data;
-                if (config.hasData) {
-                    switch (config.dtype) {
-                        case 'page' :
-                            result = {payload: []};
-                            var embd = data['_embedded'];
-                            result.page = data.page;
-                            ng.forEach(embd, function (typearr,tname) {
-                                ng.forEach(typearr,function(e){
-                                    var o = new config.objectModel(e);
-                                    o.$owningFactory(self);
-                                    result.payload.push(o);
-                                });
-                            });
-                            break;
-                        case 'array' :
-                            result = [];
-                            ng.forEach(data, function (e) {
+                var d = data.data;
+                if(ng.isDefined(d)){
+                    if(d instanceof Array){
+                        result = [];
+                        ng.forEach(d, function (e) {
+                            var o = new config.objectModel(e);
+                            o.$owningFactory(self);
+                            result.push(o);
+                        });
+                    } else if(d.hasOwnProperty(embProp)){
+                        result = {payload: []};
+                        result.page = d[pageProp];
+                        ng.forEach(d[embProp], function (typearr) {
+                            ng.forEach(typearr,function(e){
                                 var o = new config.objectModel(e);
                                 o.$owningFactory(self);
-                                result.push(o);
+                                result.payload.push(o);
                             });
-                            break;
-                        default :
-                            result = new config.objectModel(data);
-                            result.$owningFactory(self);
-                            break;
+                        });
+                    } else {
+                        result = new config.objectModel(d);
+                        result.$owningFactory(self);
                     }
                 }
                 if (success && typeof success == 'function') {
@@ -69,31 +71,25 @@
 
 
         var methods = {
-            'read': {method: 'GET', appendParam: true},
+            'read': {method: 'GET', appendArg: true, useParams : true},
             'save': {method: 'PUT', isPost: true}
         }
 
         function SDRFactory(path, config) {
             this.$entityPath = path;
-            ng.extend(this, {
-                objectModel: defmdl
-            }, config);
+            ng.extend(this, defaultConf, config);
         };
 
 
         ng.forEach(methods, function (meth, name) {
             SDRFactory.prototype[name] = function (args, s, e, conf) {
-                var url = meth.appendParam ? 'rest/api/' + this.$entityPath + '/' + args : this.$entityPath,
-                    method = !!meth.isPost ? 'POST' : meth.method,
+                var url = basePath + this.$entityPath,
+                    method = !!meth.isPost ? (!!args && !args.$exists ? 'POST' : meth.method) : meth.method,
                     success = s || undefined,
                     error = e || undefined,
-                    params = !meth.appendParam ? args : undefined,
-                    config = ng.extend({
-                        objectModel: this.objectModel || conf.objectModel,
-                        hasData: true,
-                        isArray: false,
-                        isPage: false
-                    }, conf || meth.config);
+                    params = !meth.useParams ? args : undefined,
+                    config = ng.extend({ objectModel: this.objectModel },conf);
+                url =  meth.useParams && !args.$exists ?  url + '/' + args : args.getLink('self');
                 return callResource.call(this, url, params, method, config, success, error);
             }
         });

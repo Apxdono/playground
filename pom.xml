@@ -32,7 +32,7 @@
         <wj.angularjs>1.3.6</wj.angularjs>
         <wj.metismenujs>1.1.3</wj.metismenujs>
         <wj.bootstrap>3.3.1</wj.bootstrap>
-        <wj.angularui.router>0.2.11</wj.angularui.router>
+        <wj.angularui.router>0.2.13</wj.angularui.router>
     </properties>
 
     <dependencies>
@@ -186,6 +186,12 @@
             <groupId>org.webjars</groupId>
             <artifactId>angularjs</artifactId>
             <version>${wj.angularjs}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>angular-sanitize</artifactId>
+            <version>1.3.11</version>
         </dependency>
 
         <dependency>

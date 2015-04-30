@@ -31,7 +31,7 @@ public class RepositoryRestConfig extends RepositoryRestMvcConfiguration {
     protected void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
         super.configureRepositoryRestConfiguration(config);
             config.setBasePath("/rest/api");
-            config.setReturnBodyOnCreate(true).setReturnBodyOnUpdate(true);
+            config.setReturnBodyOnCreate(false).setReturnBodyOnUpdate(false);
             Set<ManagedType<?>> l  = em.getMetamodel().getManagedTypes();
             List<Class<?>> classes = new ArrayList<Class<?>>();
             for (ManagedType<?> type : l) {
