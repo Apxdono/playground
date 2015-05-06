@@ -3,12 +3,10 @@ define([
     'angular-sanitize',
     'uiRouter',
     'sdr',
-    'adapt-strap-base',
-    'adapt-strap-tpl',
-    'smart-table'
+    'extra-smart-table'
 ], function (ng) {
     'use strict';
-    var app = ng.module('pg', ['ngSanitize','SpringDataRest','ui.router','adaptv.adaptStrap','smart-table']);
+    var app = ng.module('pg', ['ngSanitize','ui.router','SpringDataRest','smart-table-addons']);
 
 
     app.controller('MainCtrl',
@@ -26,8 +24,10 @@ define([
                 scp.table = {
                     isLoading : false,
                     items : [],
+                    tableStateInit : function(tableState){
+                        this.perPage = parseInt(tableState.pagination.number);
+                    },
                     tableData : function(tableState){
-                        if(!tableState.pagination.hasOwnProperty('number')) return;
                         var t = $timeout(function(){
                             scp.table.isLoading = true;
                         },150);
@@ -41,7 +41,7 @@ define([
                         };
                         ng.extend(params,tableState.search.predicateObject);
                         $log.debug('Table state',tableState);
-                        api.search('tableData',params).then(function(d){
+                        api.tableData(params).then(function(d){
                             scp.table.items = d.payload;
                             tableState.pagination.numberOfPages = d.page.totalPages;
                             $timeout.cancel(t);
@@ -53,86 +53,38 @@ define([
                 $log.info('scope', scp);
             }]);
 
-    app.controller('MainCtrl2',
-        [
-            '$scope',
-            '$log',
-            '$state',
-            'api',
-            'model',
-            function (scp, log,$state, api, model) {
-                log.info('View started!!!')
-                scp.api = api;
-                scp.model = model;
-                log.info('scope', scp);
-
-                function relocateToView(d){
-                    var loc = d.headers('Location')+'';
-                    var id = loc.substring(loc.lastIndexOf('/')+1);
-                    log.debug('response got', d.headers('location'), ' ID ', id);
-                    if(!model.id) { $state.go('^.view',{id : id}); }
-                    else { $state.forceReload() }
-                }
-
-
-                scp.save = function(){
-                    api.save(model).then(relocateToView);
-                };
-
-                scp.delete = function(){
-                    api.delete(model.id).then(function(d){
-                        $state.go('^.list')
-                    })
-                }
-            }]);
-
-    app.directive('pageSelect', function($timeout) {
-        return {
-            restrict: 'E',
-            template: '<input type="number" class="form-control" style="width:80px" ng-model="inputPage" ng-change="delayedSelectPage(inputPage)">',
-            link: function(scope, element, attrs) {
-                var time;
-                scope.delayedSelectPage = function(inputPage){
-                    $timeout.cancel(time);
-                    time = $timeout(function(){
-                        scope.selectPage(inputPage);
-                    },400);
-                };
-                scope.$watch('currentPage', function(c) {
-                        scope.inputPage = c;
-                });
-            }
-        }
-    })
-
-    .directive('stPersist', function () {
-        return {
-            require: '^stTable',
-            link: function (scope, element, attr, ctrl) {
-                var nameSpace = attr.stPersist;
-
-                //save the table state every time it changes
-                scope.$watch(function () {
-                    return ctrl.tableState();
-                }, function (newValue, oldValue) {
-                    if (newValue !== oldValue) {
-                        localStorage.setItem(nameSpace, JSON.stringify(newValue));
-                    }
-                }, true);
-
-                //fetch the table state when the directive is loaded
-                if (localStorage.getItem(nameSpace)) {
-                    var savedState = JSON.parse(localStorage.getItem(nameSpace));
-                    var tableState = ctrl.tableState();
-
-                    angular.extend(tableState, savedState);
-                    ctrl.pipe();
-
-                }
-
-            }
-        };
-    });
+//    app.controller('MainCtrl2',
+//        [
+//            '$scope',
+//            '$log',
+//            '$state',
+//            'api',
+//            'model',
+//            function (scp, log,$state, api, model) {
+//                log.info('View started!!!')
+//                scp.api = api;
+//                scp.model = model;
+//                log.info('scope', scp);
+//
+//                function relocateToView(d){
+//                    var loc = d.headers('Location')+'';
+//                    var id = loc.substring(loc.lastIndexOf('/')+1);
+//                    log.debug('response got', d.headers('location'), ' ID ', id);
+//                    if(!model.id) { $state.go('^.view',{id : id}); }
+//                    else { $state.forceReload() }
+//                }
+//
+//
+//                scp.save = function(){
+//                    api.save(model).then(relocateToView);
+//                };
+//
+//                scp.delete = function(){
+//                    api.delete(model.id).then(function(d){
+//                        $state.go('^.list')
+//                    })
+//                }
+//            }]);
 
 
     app.directive('showDuringResolve', function($rootScope) {
@@ -169,21 +121,21 @@ define([
                     });
 
 
-                var unregister = $rootScope.$on('$routeChangeStart', function() {
-                    if(show) {
-                        element.removeClass('ng-hide');
-                    } else {
-                        element.addClass('ng-hide');
-                    }
-                });
-
-                var unregister2 = $rootScope.$on('$routeChangeSuccess', function() {
-                    if(show) {
-                        element.addClass('ng-hide');
-                    } else {
-                        element.removeClass('ng-hide');
-                    }
-                });
+//                var unregister = $rootScope.$on('$routeChangeStart', function() {
+//                    if(show) {
+//                        element.removeClass('ng-hide');
+//                    } else {
+//                        element.addClass('ng-hide');
+//                    }
+//                });
+//
+//                var unregister2 = $rootScope.$on('$routeChangeSuccess', function() {
+//                    if(show) {
+//                        element.addClass('ng-hide');
+//                    } else {
+//                        element.removeClass('ng-hide');
+//                    }
+//                });
 
                 //scope.$on('$destroy', unregister);
                 //scope.$on('$destroy', unregister2);
@@ -191,28 +143,6 @@ define([
         };
     });
 
-    //app.directive('resolveLoader', [
-    //    '$rootScope',
-    //    '$timeout',
-    //    function($rootScope, $timeout) {
-    //
-    //    return {
-    //        restrict: 'A',
-    //        link: function(scope, element) {
-    //            $rootScope.$on('$routeChangeStart', function(event, currentRoute, previousRoute) {
-    //                if (previousRoute) return;
-    //
-    //                $timeout(function() {
-    //                    element.removeClass('ng-hide');
-    //                });
-    //            });
-    //
-    //            $rootScope.$on('$routeChangeSuccess', function() {
-    //                element.addClass('ng-hide');
-    //            });
-    //        }
-    //    };
-    //}]);
 
 
     return app;

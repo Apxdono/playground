@@ -15,7 +15,9 @@
 
         <div class="input-group">
             <label class="input-group-addon alert-info">Размер</label>
-            <select ng-model="stItemsByPage" class="form-control" style="width: 70px" ng-options="v for v in [5,10,15,25,50]"></select>
+            <select ng-model="stItemsByPage" class="form-control" style="width: 70px" ng-options="v as v for v in [5,10,15,25,50]" >
+                <!--<option ng-repeat="v in [5,10,15,25,50]" value="{{::v}}" ng-bind="::v"></option>-->
+            </select>
         </div>
 
     </div>

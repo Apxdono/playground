@@ -8,7 +8,8 @@ try{
                 'angular-sanitize': 'webjars/angular-sanitize/1.3.11/angular-sanitize.min',
                 'adapt-strap-base': 'static/vendor/adapt-strap/adapt-strap',
                 'adapt-strap-tpl': 'static/vendor/adapt-strap/adapt-strap.tpl.min',
-                'smart-table' : 'webjars/smart-table/2.0.1/smart-table.min',
+                'smart-table' : 'webjars/smart-table/2.0.1/smart-table',
+                'extra-smart-table' : 'static/apx/smart-table-addons',
                 'ng-route': 'webjars/angularjs/${wj.angularjs}/angular-route',
                 'uiRouter': 'webjars/angular-ui-router/${wj.angularui.router}/angular-ui-router.min',
                 'sdr': 'static/apx/data-rest'
@@ -29,11 +30,12 @@ try{
                 },
                 'adapt-strap-base' : ['angular'],
                 'adapt-strap-tpl' : ['angular','adapt-strap-base'],
-                'smart-table' : ['angular']
+                'smart-table' : ['angular'],
+                'extra-smart-table' : ['angular','smart-table']
             },
 
             // запустить приложение
-            deps: ['static/js/spa/appbootstrap']
+            deps: ['static/js/spa/entry-point']
         });
     })(window);
 } finally {

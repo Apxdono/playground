@@ -10,6 +10,7 @@ import org.springframework.format.support.FormattingConversionService;
 @Configuration
 //@Profile({"test","prod"})
 @Import({JpaConfig.class, RepositoryRestConfig.class})
+@EnableAspectJAutoProxy
 @ComponentScan("org.apx.beans;org.apx.config")
 public class ApplicationConfig {
 

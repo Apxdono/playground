@@ -15,14 +15,33 @@
             putReturnsValue: true,
             processResponse : true
         };
-        
+
+        /*
+        * Whole spec is
+         *  name : {
+         *      method : 'GET'/'POST'/'PUT'/'PATCH'/'DELETE'
+         *      firstArgIsSuffix : true/false -- should first argument be a part of rest path
+         *      functionIsSuffix : true/false -- should function name argument be a part of rest path
+         *      noParams : true/false -- use parameters or not
+         *      processResponse : true/false -- post processing of response (wrapping data into RestResource utility function). Doesn't affect processingFunction call
+         *      processingFunction : function -- will process data instead/after built in function (depending on processResponse)
+         *      url : string -- url to be used instead of calculating one. (Substitutes only basePath and DataRest constructor path. Applies flags firstArgIsSuffix and functionIsSuffix)
+         *      altMethod : another alternative to method (requires useAltMethodCheck and altMethodUrl to be present as well)
+         *      useAltMethodCheck : true/function --  use default function or a custom function that returns true or false. (*altMethod will be applied)
+         *      altMethodUrl : true/function --  use default function or a custom function that returns a valid url. (*altMethod will be applied)
+         *      batchMode : true/false -- if stumbled across array params in POST/PUT/PATCH defines should each object be processed in a same separate function call
+         *      parent : string -- function name of a parent function
+         *      parentArgs : function -- function that returns argumetns for parent
+         *  }
+        */
         var _methods = {
             'read': {method: 'GET', firstArgIsSuffix: true, noParams: true, processResponse: true},
-            'save': {method: 'POST', altMethod: 'PUT', useSelf: true, processResponse: true},
+            'save': {method: 'POST', altMethod: 'PUT', useAltMethodCheck : true, altMethodUrl : true, batchMode : true, processResponse: true},
             'delete': {method: 'DELETE', firstArgIsSuffix: true, noParams: true},
             'search': {method: 'GET', firstArgIsSuffix: true, functionIsSuffix: true, processResponse: true}
-            //'tableData': {method: 'GET',  processResponse: true, processingFunction : adaptStrapPostProcess }
         };
+
+        var _extraMethods = {};
 
         this.basePath = function (prefix) {
             if (ng.isDefined(prefix) && prefix != '') {
@@ -31,11 +50,14 @@
             return _basePath;
         };
 
-        this.config = function (cfg) {
+        this.config = function (cfg,methods) {
             if (ng.isDefined(cfg) && ng.isObject(cfg)) {
                 ng.extend(_config, cfg);
             }
-            return _config;
+            if (ng.isDefined(methods) && ng.isObject(methods)) {
+               _extraMethods = methods;
+            }
+            return ng.extend({},_config);
         };
 
         this.$get = ['$log', '$http', '$q', function ($log, $http, $q) {
@@ -177,6 +199,46 @@
                 return result;
             };
 
+            /**
+             * Creating necessary methods
+             * @param attrs
+             * @param name
+             */
+            function addPrototypeMethod(attrs, name) {
+                DataRest.prototype[name] = function () {
+                    if(attrs.parent){
+                        return this[attrs.parent].apply(this,attrs.parentArgs.apply(this,arguments));
+                    }
+
+                    var url = ng.isDefined(attrs.url) ? attrs.url : _basePath + this.getPath(),
+                        firstArgProcessed = false;
+                    if (attrs.functionIsSuffix) {
+                        url += '/' + name;
+                    }
+                    if (attrs.firstArgIsSuffix && ng.isDefined(arguments[0]) && isPrimitive(arguments[0])) {
+                        url += '/' + arguments[0];
+                        firstArgProcessed = true;
+                    }
+                    var needArgs = attrs.firstArgIsSuffix && firstArgProcessed;
+                    var data = needArgs ? arguments[1] : arguments[0];
+                    var method = attrs.method;
+
+                    if(attrs.batchMode && /^(POST|PUT|PATCH)$/i.test(method) && data instanceof Array){
+                        var self = this;
+                        return $q.all(data.map(self[name],self));
+                    }
+
+                    if (attrs.useAltMethodCheck) {
+                        var check = ng.isFunction(attrs.useAltMethodCheck) ? attrs.useAltMethodCheck : objectExists;
+                        if(check.call(this,data)){
+                            method = attrs.altMethod;
+                            url = ng.isFunction(attrs.altMethodUrl) ? attrs.altMethodUrl.apply(this,data) : data.link('self');
+                        }
+                    }
+                    return processRequest(url, method, data, attrs);
+                };
+            }
+
 
             /**
              * The rest factory
@@ -190,57 +252,11 @@
                 };
             };
 
-            ng.forEach(_methods, function (attrs, name) {
-                DataRest.prototype[name] = function () {
-                    var url = _basePath + this.getPath(),
-                        firstArgProcessed = false;
-                    if (attrs.functionIsSuffix) {
-                        url += '/' + name;
-                    }
-                    if (attrs.firstArgIsSuffix && ng.isDefined(arguments[0]) && isPrimitive(arguments[0])) {
-                        url += '/' + arguments[0];
-                        firstArgProcessed = true;
-                    }
-                    var needArgs = attrs.firstArgIsSuffix && firstArgProcessed;
-                    var data = needArgs ? arguments[1] : arguments[0];
-                    var method = attrs.method;
-
-                    if(/^(POST|PUT|PATCH)$/i.test(method) && data instanceof Array){
-                        var self = this;
-                        return $q.all(data.map(self[name],self));
-                    }
-
-                    if (attrs.useSelf && objectExists(data) && attrs.altMethod) {
-                        method = attrs.altMethod;
-                        url = data.link('self');
-                    }
-                    return processRequest(url, method, data, attrs);
-                };
-            })
+            ng.forEach(_methods,addPrototypeMethod);
+            ng.forEach(_extraMethods,addPrototypeMethod);
 
             return DataRest;
         }];
     });
-
-
-    //var app = ng.module('testapp', ['SpringDataRest']);
-    //
-    //app.config(['dataRestProvider', function ($dataRestProvider) {
-    //    console.log('Data rest provider config', $dataRestProvider.config({
-    //        //mergeEmbedded: false,
-    //        //postReturnsValue: false,
-    //        //putReturnsValue: false
-    //    }));
-    //    $dataRestProvider.basePath('/pg/rest/api')
-    //}]);
-    //
-    //
-    //app.controller('TestCt', ['$scope', '$log', 'dataRest', function ($scope, $log, dataRest) {
-    //    $log.debug('Data rest service', dataRest);
-    //    $scope.api1 = new dataRest('/shits');
-    //    $scope.api2 = new dataRest('/bitches');
-    //}]);
-
-    //ng.bootstrap(document,['testapp']);
 
 })(angular,undefined, {});

@@ -23,8 +23,8 @@
     </style>
 
 
-    <table class="table table-striped border-top " st-persist="shitTable" st-pipe="table.tableData" st-table="table.items">
-        <thead class="text-primary">
+    <table class="table table-striped border-top " st-persist="shitTable" st-restored="table.tableStateInit(tableState)" st-pipe="table.tableData" st-table="table.items">
+        <thead class="text-primary" >
         <tr>
             <th st-sort="name">Имя</th>
             <th st-sort="internalName">Внутреннее имя</th>
@@ -49,7 +49,7 @@
         </tbody>
         <tfoot>
         <tr>
-            <td class="text-center" st-pagination="" st-items-by-page="5" st-template="pagination.html" colspan="4">
+            <td class="text-center" st-pagination="" st-items-by-page="table.perPage" st-template="pagination.html" colspan="4">
 
             </td>
         </tr>
